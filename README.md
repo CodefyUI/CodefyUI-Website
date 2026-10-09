@@ -38,12 +38,22 @@ and the dictionaries. The latest release tag is read from GitHub at build time
 
 ## Deploy
 
-Cloudflare Pages project `codefyui-website`, custom domain `www.codefyui.com`.
+GitHub Actions (`.github/workflows/deploy.yml`) builds every push and pull request:
 
-```bash
-npx wrangler login     # once
-npm run deploy         # build + wrangler pages deploy dist
-```
+- **push to `main`** → production on Cloudflare Pages project `codefyui-website`, served at
+  [www.codefyui.com](https://www.codefyui.com)
+- **pull request** from this repository → a preview deployment; the URL appears on the PR's
+  `preview` environment
 
-Or connect the repository in the Cloudflare dashboard (Workers & Pages → Create → Pages →
-Connect to Git) with build command `npm run build` and output directory `dist`.
+The deploy job also makes sure the Pages project exists and that `www.codefyui.com` is attached
+to it with a proxied CNAME to `codefyui-website.pages.dev` (`scripts/ci/ensure-domain.sh`; an
+existing DNS record pointing elsewhere is left alone with a warning).
+
+Repository secrets:
+
+| Secret | Value |
+|--------|-------|
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account that owns `codefyui.com` |
+| `CLOUDFLARE_API_TOKEN` | A custom API token with **Account › Cloudflare Pages › Edit**, plus **Zone › Zone › Read** and **Zone › DNS › Edit** for `codefyui.com` |
+
+Manual deploy from a laptop, if ever needed: `npx wrangler login`, then `npm run deploy`.

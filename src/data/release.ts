@@ -7,7 +7,11 @@ export function release() {
   cached ??= (async () => {
     try {
       const res = await fetch('https://api.github.com/repos/CodefyUI/CodefyUI/releases/latest', {
-        headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'codefyui-website' },
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'codefyui-website',
+          ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
+        },
         signal: AbortSignal.timeout(5000),
       });
       if (!res.ok) return FALLBACK;
