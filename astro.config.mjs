@@ -5,6 +5,13 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://www.codefyui.com',
   trailingSlash: 'ignore',
+  // Short links. GitHub Pages has no redirect rules, so Astro writes a tiny
+  // redirect page for each of these.
+  redirects: {
+    '/zh': '/zh-TW/',
+    '/docs': 'https://docs.codefyui.com/',
+    '/github': 'https://github.com/CodefyUI/CodefyUI',
+  },
   build: { format: 'directory', inlineStylesheets: 'always' },
   integrations: [
     sitemap({

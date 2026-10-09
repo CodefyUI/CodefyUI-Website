@@ -5,7 +5,7 @@ Source of [www.codefyui.com](https://www.codefyui.com), the landing site for
 [docs.codefyui.com](https://docs.codefyui.com).
 
 A static [Astro](https://astro.build) site in English (`/`) and Traditional Chinese (`/zh-TW/`),
-deployed to Cloudflare Pages.
+deployed to GitHub Pages.
 
 ## Develop
 
@@ -28,7 +28,6 @@ Node 22.12 or newer.
 | `src/components/Home.astro` | All page sections |
 | `src/scripts/site.ts` | Nav, smooth scroll, editor tour, node filter, Edu-ColumnStats, copy buttons, tabs |
 | `src/styles/global.css` | Tokens (the editor's own surface ladder) and all styles |
-| `public/_headers`, `public/_redirects` | Cloudflare Pages security headers, caching and short links |
 | `scripts/og/` | Renders `public/og*.png` and the app icons with Playwright (`node scripts/og/render.mjs`) |
 | `scripts/shots.mjs` | Screenshots at four viewports for design review (`node scripts/shots.mjs http://localhost:4321`) |
 
@@ -38,22 +37,10 @@ and the dictionaries. The latest release tag is read from GitHub at build time
 
 ## Deploy
 
-GitHub Actions (`.github/workflows/deploy.yml`) builds every push and pull request:
+GitHub Actions (`.github/workflows/deploy.yml`) publishes the site to **GitHub Pages** on every
+push to `main`; pull requests only build. The repository's Pages settings use *GitHub Actions*
+as the source and `www.codefyui.com` as the custom domain, and Cloudflare DNS has a DNS-only
+`CNAME www → treeleaves30760.github.io`.
 
-- **push to `main`** → production on Cloudflare Pages project `codefyui-website`, served at
-  [www.codefyui.com](https://www.codefyui.com)
-- **pull request** from this repository → a preview deployment; the URL appears on the PR's
-  `preview` environment
-
-The deploy job also makes sure the Pages project exists and that `www.codefyui.com` is attached
-to it with a proxied CNAME to `codefyui-website.pages.dev` (`scripts/ci/ensure-domain.sh`; an
-existing DNS record pointing elsewhere is left alone with a warning).
-
-Repository secrets:
-
-| Secret | Value |
-|--------|-------|
-| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account that owns `codefyui.com` |
-| `CLOUDFLARE_API_TOKEN` | A custom API token with **Account › Cloudflare Pages › Edit**, plus **Zone › Zone › Read** and **Zone › DNS › Edit** for `codefyui.com` |
-
-Manual deploy from a laptop, if ever needed: `npx wrangler login`, then `npm run deploy`.
+GitHub Pages cannot set response headers or redirect rules, so the short links `/zh`, `/docs`
+and `/github` are generated as redirect pages by Astro (`redirects` in `astro.config.mjs`).
