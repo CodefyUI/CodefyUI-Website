@@ -680,7 +680,7 @@ p {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
 }
-@media (max-width: 1100px) {
+@media (max-width: 1340px) {
   .demo__body {
     grid-template-columns: 1fr;
   }
@@ -1011,7 +1011,7 @@ p {
   background: var(--panel);
   min-height: 100%;
 }
-@media (max-width: 1100px) {
+@media (max-width: 1340px) {
   .inspector {
     border-left: 0;
     border-top: 1px solid var(--line);
@@ -1030,7 +1030,7 @@ p {
 .inspector__body {
   padding: 16px;
 }
-@media (max-width: 1100px) and (min-width: 721px) {
+@media (max-width: 1340px) and (min-width: 721px) {
   .inspector__body {
     display: grid;
     grid-template-columns: auto 1fr 1fr;

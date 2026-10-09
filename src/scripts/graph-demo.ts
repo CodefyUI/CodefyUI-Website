@@ -40,7 +40,7 @@ const WIDE: { w: number; h: number; pos: Layout } = {
     conv: { x: 462, y: 6 },
     act: { x: 746, y: 22 },
     pool: { x: 462, y: 300 },
-    viz: { x: 746, y: 216 },
+    viz: { x: 746, y: 316 },
   },
 };
 const STACK: { w: number; h: number; pos: Layout } = {
@@ -126,22 +126,31 @@ export function mountDemo(root: HTMLElement) {
 
   // ---------------------------------------------------------------- layout
   function applyLayout() {
-    const avail = canvas.clientWidth;
+    const cs = getComputedStyle(canvas);
+    const avail = canvas.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     const next = avail >= 720 ? 'wide' : 'stack';
     const L = next === 'wide' ? WIDE : STACK;
     if (next !== mode) {
       mode = next;
       Object.assign(pos, structuredClone(L.pos));
     }
-    scale = Math.min(1, avail / L.w);
-    world.style.width = `${L.w}px`;
-    world.style.height = `${L.h}px`;
-    world.style.transform = `scale(${scale})`;
-    canvas.style.minHeight = `${L.h * scale}px`;
-    root.dataset.layout = mode;
     (Object.keys(pos) as NodeId[]).forEach((id) => {
       nodeEls[id].style.transform = `translate(${pos[id].x}px, ${pos[id].y}px)`;
     });
+    // World bounds come from the real node sizes, so fonts or copy changes never clip a node.
+    let w = L.w;
+    let h = L.h;
+    (Object.keys(pos) as NodeId[]).forEach((id) => {
+      w = Math.max(w, pos[id].x + nodeEls[id].offsetWidth + 8);
+      h = Math.max(h, pos[id].y + nodeEls[id].offsetHeight + 12);
+    });
+    scale = Math.min(1, avail / w);
+    world.style.width = `${w}px`;
+    world.style.height = `${h}px`;
+    world.style.transform = `scale(${scale})`;
+    world.style.marginLeft = `${Math.max(0, (avail - w * scale) / 2)}px`;
+    canvas.style.minHeight = `${h * scale}px`;
+    root.dataset.layout = mode;
     drawWires();
   }
 
