@@ -1,0 +1,187 @@
+---
+import type { Dict } from '../i18n/en';
+import { KERNELS, ACTIVATIONS } from '../scripts/tensor';
+
+interface Props {
+  t: Dict;
+}
+const { t } = Astro.props;
+const d = t.demo;
+
+const strings = {
+  run: d.run,
+  running: d.running,
+  idle: d.idle,
+  done: d.done('{ms}'),
+  reran: [d.reran(1, '{ms}'), d.reran(2, '{ms}').replace('2', '{n}')],
+  input: d.input,
+  output: d.output,
+  changed: d.changed,
+  shape: d.shape,
+  min: d.min,
+  max: d.max,
+  mean: d.mean,
+  pickNode: d.pickNode,
+  hintTouch: d.hintTouch,
+};
+
+const cells = Array.from({ length: 64 }, (_, i) => i);
+---
+
+<figure class="demo" data-demo data-strings={JSON.stringify(strings)} aria-label={d.label}>
+  <div class="demo__bar">
+    <button class="demo__run" type="button" data-run>
+      <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.8v8.4L10 6z" fill="currentColor"></path></svg>
+      <span>{d.run}</span>
+    </button>
+    <span class="demo__status" data-status role="status"><i aria-hidden="true"></i><span>{d.idle}</span></span>
+    <span class="demo__hint" data-hint>{d.hint}</span>
+  </div>
+
+  <div class="demo__body">
+    <div class="demo__canvas" data-canvas>
+      <div class="demo__world" data-world>
+        <svg class="demo__wires" data-wires aria-hidden="true"></svg>
+
+        <div class="gnode gnode--start" data-node="start" data-cat="#22c55e" style="--cat:#22c55e">
+          <div class="gnode__head" data-handle><span class="gnode__name">Start</span></div>
+          <div class="gnode__port gnode__port--out" data-port="start:out" data-type="trigger">
+            <span>{d.trigger}</span><b class="dot dot--diamond" aria-hidden="true"></b>
+          </div>
+        </div>
+
+        <div class="gnode" data-node="input" style="--cat:#00bcd4">
+          <div class="gnode__head" data-handle>
+            <button type="button" class="gnode__name" data-inspect aria-label={`${d.inspect} TensorInput`}>TensorInput</button><span class="gnode__cat">Data</span>
+          </div>
+          <div class="gnode__port gnode__port--in" data-port="input:trigger" data-type="trigger">
+            <b class="dot dot--diamond" aria-hidden="true"></b><span>{d.trigger}</span>
+          </div>
+          <div class="gnode__port gnode__port--out" data-port="input:out" data-type="tensor">
+            <span>tensor</span><b class="dot" aria-hidden="true"></b>
+          </div>
+          <div class="gnode__params">
+            <div class="param"><span>shape</span><code>1,1,8,8</code></div>
+            <div class="param"><span>value_mode</span><code>explicit</code></div>
+          </div>
+          <div class="grid" data-grid role="group" aria-label={d.gridLabel}>
+            {
+              [0, 1, 2, 3, 4, 5, 6, 7].map((r) => (
+                <div class="grid__row">
+                  {cells.slice(r * 8, r * 8 + 8).map((i) => (
+                    <button
+                      type="button"
+                      class="grid__cell"
+                      data-cell={i}
+                      tabindex={i === 0 ? 0 : -1}
+                      aria-pressed="false"
+                      aria-label={`${Math.floor(i / 8) + 1},${(i % 8) + 1}`}
+                    />
+                  ))}
+                </div>
+              ))
+            }
+          </div>
+          <div class="grid__presets">
+            <button type="button" data-preset="digit">{d.presets.digit}</button>
+            <button type="button" data-preset="ring">{d.presets.ring}</button>
+            <button type="button" data-preset="cross">{d.presets.cross}</button>
+            <button type="button" data-preset="clear">{d.presets.clear}</button>
+          </div>
+        </div>
+
+        <div class="gnode" data-node="conv" style="--cat:#4caf50">
+          <div class="gnode__head" data-handle>
+            <button type="button" class="gnode__name" data-inspect aria-label={`${d.inspect} Conv2dExplicit`}>Conv2dExplicit</button><span class="gnode__cat">CNN</span>
+          </div>
+          <div class="gnode__port gnode__port--in" data-port="conv:in" data-type="tensor">
+            <b class="dot" aria-hidden="true"></b><span>tensor</span>
+          </div>
+          <div class="gnode__port gnode__port--out" data-port="conv:out" data-type="tensor">
+            <span>tensor</span><b class="dot" aria-hidden="true"></b>
+          </div>
+          <div class="gnode__params">
+            <label class="param param--select">
+              <span>preset</span>
+              <select data-param="preset">
+                {Object.keys(KERNELS).map((k) => <option value={k}>{k}</option>)}
+              </select>
+            </label>
+            <div class="kernel" data-kernel aria-hidden="true">
+              {Array.from({ length: 9 }, () => <span />)}
+            </div>
+            <div class="param"><span>stride</span><code>1</code></div>
+            <div class="param"><span>padding</span><code>1</code></div>
+          </div>
+        </div>
+
+        <div class="gnode" data-node="act" style="--cat:#4caf50">
+          <div class="gnode__head" data-handle>
+            <button type="button" class="gnode__name" data-inspect aria-label={`${d.inspect} Activation`}>Activation</button><span class="gnode__cat">CNN</span>
+          </div>
+          <div class="gnode__port gnode__port--in" data-port="act:in" data-type="tensor">
+            <b class="dot" aria-hidden="true"></b><span>tensor</span>
+          </div>
+          <div class="gnode__port gnode__port--out" data-port="act:out" data-type="tensor">
+            <span>tensor</span><b class="dot" aria-hidden="true"></b>
+          </div>
+          <div class="gnode__params">
+            <label class="param param--select">
+              <span>function</span>
+              <select data-param="function">
+                {ACTIVATIONS.map((k) => <option value={k}>{k}</option>)}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="gnode" data-node="pool" style="--cat:#4caf50">
+          <div class="gnode__head" data-handle>
+            <button type="button" class="gnode__name" data-inspect aria-label={`${d.inspect} MaxPool2d`}>MaxPool2d</button><span class="gnode__cat">CNN</span>
+          </div>
+          <div class="gnode__port gnode__port--in" data-port="pool:in" data-type="tensor">
+            <b class="dot" aria-hidden="true"></b><span>tensor</span>
+          </div>
+          <div class="gnode__port gnode__port--out" data-port="pool:out" data-type="tensor">
+            <span>tensor</span><b class="dot" aria-hidden="true"></b>
+          </div>
+          <div class="gnode__params">
+            <div class="param"><span>kernel_size</span><code>2</code></div>
+            <div class="param"><span>stride</span><code>2</code></div>
+          </div>
+        </div>
+
+        <div class="gnode" data-node="viz" style="--cat:#8097a2">
+          <div class="gnode__head" data-handle>
+            <button type="button" class="gnode__name" data-inspect aria-label={`${d.inspect} Visualize`}>Visualize</button><span class="gnode__cat">Utility</span>
+          </div>
+          <div class="gnode__port gnode__port--in" data-port="viz:in" data-type="any">
+            <b class="dot" aria-hidden="true"></b><span>data</span>
+          </div>
+          <div class="gnode__port gnode__port--out" data-port="viz:out" data-type="image">
+            <span>image</span><b class="dot" aria-hidden="true"></b>
+          </div>
+          <div class="gnode__params">
+            <div class="param"><span>plot_type</span><code>heatmap</code></div>
+          </div>
+          <div class="viz" data-viz aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="inspector" data-inspector aria-live="polite">
+      <div class="inspector__head">
+        <span>{d.inspector}</span>
+      </div>
+      <div class="inspector__body" data-inspector-body>
+        <p class="inspector__empty">{d.pickNode}</p>
+      </div>
+    </aside>
+  </div>
+  <figcaption class="demo__note">{d.inBrowser}</figcaption>
+</figure>
+
+<script>
+  import { mountDemo } from '../scripts/graph-demo';
+  document.querySelectorAll<HTMLElement>('[data-demo]').forEach(mountDemo);
+</script>

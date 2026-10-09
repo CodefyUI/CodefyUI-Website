@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:S;src:url(../../node_modules/@fontsource-variable/schibsted-grotesk/files/schibsted-grotesk-latin-wght-normal.woff2) format('woff2');font-weight:400 900}
+@font-face{font-family:M;src:url(../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2) format('woff2');font-weight:100 800}
+*{box-sizing:border-box;margin:0}
+body{width:1200px;height:630px;background:#0f1319;font-family:S,'PingFang TC',sans-serif;color:#f0f4f8;overflow:hidden;position:relative;
+background-image:radial-gradient(circle at 1px 1px,#262e3a 1px,transparent 0);background-size:24px 24px}
+.wm{position:absolute;left:64px;top:56px;font-weight:760;font-size:34px;letter-spacing:-.03em;display:flex;align-items:center;gap:14px}
+.wm b{color:#22d3ee;font-weight:inherit}
+h1{position:absolute;left:64px;top:150px;font-size:var(--fs,92px);line-height:.95;letter-spacing:-.045em;font-weight:660;width:640px}
+h1 span{display:block}
+h1 span+span{color:#aeb9c6}
+.zh h1{letter-spacing:-.01em;line-height:1.12;font-weight:700}
+.foot{position:absolute;left:64px;bottom:52px;font-size:22px;color:#aeb9c6}
+.n{position:absolute;background:#242b37;border:1px solid #313a48;border-radius:10px;width:220px;font-size:15px;box-shadow:0 20px 50px -20px #000}
+.h{display:flex;justify-content:space-between;padding:10px 14px;border-radius:9px 9px 0 0;border-bottom:1px solid #313a48;font-weight:700}
+.h i{font-style:normal;color:#aeb9c6;font-weight:560;font-size:13px}
+.p{height:30px;display:flex;align-items:center;padding:0 14px;color:#6cc76f;position:relative;font-size:14px}
+.p.o{justify-content:flex-end}
+.p:after{content:'';position:absolute;top:9px;width:12px;height:12px;border-radius:50%;background:#40a445;box-shadow:0 0 0 2px #242b37}
+.p.i:after{left:-7px}.p.o:after{right:-7px}
+.g{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;padding:10px 14px 14px}
+.g span{aspect-ratio:1;background:#2c3441;border-radius:2px}.g span.on{background:#f0f4f8}
+.k{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:6px 14px 14px;width:150px;margin-left:auto}
+.k span{height:26px;display:grid;place-items:center;font-family:M;font-size:12px;border-radius:2px;background:color-mix(in oklab,#f66358 40%,transparent)}
+.k span.c{background:#22d3ee;color:#04212b}
+.v{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:10px 14px 14px}
+.v span{aspect-ratio:1;border-radius:2px;background:#2c3441}
+svg{position:absolute;inset:0}
+.run{box-shadow:0 0 0 3px color-mix(in oklab,#22d3ee 35%,transparent),0 0 50px -6px #22d3ee;border-color:#22d3ee}
+</style></head>
+<body class="__LANG__">
+<div class="wm"><svg viewBox="0 0 32 32" width="36" height="36" style="position:static"><path d="M13 9h1.5a2 2 0 0 1 2 2v10a2 2 0 0 0 2 2H19" stroke="#40a445" stroke-width="2" fill="none"/><rect x="2" y="4" width="11" height="10" rx="2.5" fill="#22d3ee"/><rect x="19" y="18" width="11" height="10" rx="2.5" fill="#f0f4f8"/></svg><span>Codefy<b>UI</b></span></div>
+<h1>__TITLE__</h1>
+<div class="foot">__FOOT__</div>
+<svg width="1200" height="630"><path d="M906 140 H930 a10 10 0 0 1 10 10 V318 a10 10 0 0 0 10 10 H962" fill="none" stroke="#40a445" stroke-width="2.5"/>
+<path d="M906 440 H930 a10 10 0 0 0 10 -10 V420" fill="none" stroke="#40a445" stroke-width="0"/></svg>
+<div class="n" style="left:686px;top:60px"><div class="h" style="background:color-mix(in oklab,#00bcd4 22%,#242b37)">TensorInput <i>Data</i></div>
+<div class="p o">tensor</div><div class="g">__GRID__</div></div>
+<div class="n run" style="left:962px;top:270px;width:200px"><div class="h" style="background:color-mix(in oklab,#4caf50 22%,#242b37)">Conv2dExplicit <i>CNN</i></div>
+<div class="p i">tensor</div><div class="k"><span>-1</span><span>-1</span><span>-1</span><span>-1</span><span class="c">8</span><span>-1</span><span>-1</span><span>-1</span><span>-1</span></div></div>
+<div class="n" style="left:720px;top:430px;width:190px"><div class="h" style="background:color-mix(in oklab,#8097a2 22%,#242b37)">Visualize <i>Utility</i></div>
+<div class="v">__VIZ__</div></div>
+</body></html>

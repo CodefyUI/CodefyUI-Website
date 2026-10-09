@@ -1,0 +1,452 @@
+---
+import { Picture } from 'astro:assets';
+import type { Dict } from '../i18n/en';
+import Demo from './Demo.astro';
+import Nav from './Nav.astro';
+import Footer from './Footer.astro';
+import Copy from './Copy.astro';
+import { categories, nodeCount, categoryCount } from '../data/nodes';
+import uiEn from '../assets/ui-en.png';
+import uiZh from '../assets/ui-zh.png';
+import { release } from '../data/release';
+
+interface Props {
+  t: Dict;
+}
+const { t } = Astro.props;
+const zh = t.lang !== 'en';
+const docs = zh ? 'https://docs.codefyui.com/zh-TW/' : 'https://docs.codefyui.com/';
+const gh = 'https://github.com/CodefyUI/CodefyUI';
+const rel = await release();
+
+const installUnix = 'curl -fsSL https://raw.githubusercontent.com/CodefyUI/CodefyUI/main/install.sh | bash';
+const installWin =
+  'powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/CodefyUI/CodefyUI/main/install.ps1 | iex"';
+
+// Hotspots on the editor screenshot, in percent of the image.
+// z is the camera zoom used when that step is active; fx/fy the point to centre.
+const spots = [
+  { l: 2.2, t: 9.2, w: 15.6, h: 86, z: 1.9, fx: 12, fy: 26 },
+  { l: 33, t: 11, w: 53.5, h: 83, z: 1.45, fx: 58, fy: 45 },
+  { l: 5.4, t: 0.6, w: 19.8, h: 4.2, z: 2.6, fx: 15, fy: 3 },
+  { l: 0.4, t: 96.2, w: 17, h: 3.6, z: 2.6, fx: 10, fy: 97 },
+];
+
+// Terminal panes for the "ship" section. Commands are taken from the docs.
+const panes = [
+  `<span class="c"># Submit a graph to the server's queue.
+# The run keeps going after the terminal closes.</span>
+<span class="p">$</span> cdui run examples/Usage_Example/CNN-MNIST/TrainCNN-MNIST/graph.json
+
+<span class="c"># Run one graph over a grid of parameter values.</span>
+<span class="p">$</span> curl -X POST http://127.0.0.1:8000/api/sweeps \\
+    -H "X-CodefyUI-Token: $TOKEN" \\
+    --data "@sweep.json"`,
+  `<span class="c"># A published graph answers HTTP like any other API.</span>
+<span class="p">$</span> curl -s -X POST "http://127.0.0.1:8000/api/apps/classifier/invoke" \\
+    -H "Authorization: Bearer <span class="w">cdui_YOUR_KEY</span>" \\
+    -H "Content-Type: application/json" \\
+    --data "@payload.json"
+
+<span class="c"># payload.json</span>
+{<span class="s">"inputs"</span>: {<span class="s">"x"</span>: <span class="s">"hello"</span>}}`,
+  `<span class="c"># A project directory is plain files, so it is plain git.</span>
+<span class="p">$</span> cdui project init my-project
+<span class="p">$</span> cdui start --project my-project
+
+<span class="c"># In the editor: Source Control tab
+#   stage · commit · branch · stash · pull · push</span>
+<span class="p">$</span> git log --oneline
+<span class="k">a41c2e0</span> Lower the learning rate to 3e-4
+<span class="k">9be07d1</span> Add RandAugment before the DataLoader`,
+  `<span class="c"># ResNet-18 on CIFAR-10, from the examples folder.</span>
+<span class="p">$</span> cdui run examples/Usage_Example/ResNet18-CIFAR10-Baseline/graph.json
+
+<span class="c"># Top-1 test accuracy</span>        <span class="s">95.48%</span>
+<span class="c"># Same-seed re-run</span>           <span class="s">95.48%</span>
+<span class="c"># Recorded metric points</span>     601 of 601 <span class="s">bitwise identical</span>`,
+];
+const pyNode = `<span class="k">from</span> app.core.node_base <span class="k">import</span> BaseNode, DataType, PortDefinition
+
+
+<span class="k">class</span> <span class="f">MyNode</span>(BaseNode):
+    NODE_NAME = <span class="s">"MyNode"</span>
+    CATEGORY = <span class="s">"Custom"</span>
+    DESCRIPTION = <span class="s">"Does something"</span>
+
+    <span class="n">@classmethod</span>
+    <span class="k">def</span> <span class="f">define_inputs</span>(cls):
+        <span class="k">return</span> [PortDefinition(name=<span class="s">"input"</span>, data_type=DataType.TENSOR)]
+
+    <span class="n">@classmethod</span>
+    <span class="k">def</span> <span class="f">define_outputs</span>(cls):
+        <span class="k">return</span> [PortDefinition(name=<span class="s">"output"</span>, data_type=DataType.TENSOR)]
+
+    <span class="k">def</span> <span class="f">execute</span>(self, inputs, params):
+        <span class="k">return</span> {<span class="s">"output"</span>: inputs[<span class="s">"input"</span>]}`;
+const archCat = ['CNN', 'CNN', 'CNN', 'CNN', 'Transformer', 'Transformer', 'LLM', 'LLM', 'LLM', 'Diffusion', 'RNN', 'RNN', 'RNN', 'RL', 'RL'];
+const catColor: Record<string, string> = Object.fromEntries(categories.map((c) => [c.name.en, c.color]));
+const archColor = archCat.map((c) => catColor[c]);
+const paneTitles = ['cdui run', 'publish · invoke', 'source control', 'reproducing baselines'];
+
+const github = `<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>`;
+const arrow = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9L9 3M4 3h5v5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>`;
+---
+
+<Nav t={t} />
+
+<main id="main">
+  <!-- ============================================================ hero -->
+  <section class="hero" aria-labelledby="hero-title" data-hero>
+    <div class="wrap">
+      <div class="hero__top">
+        <h1 class="hero__title" id="hero-title">
+          {t.hero.title.map((l) => <span class="line"><span>{l}</span></span>)}
+        </h1>
+        <p class="hero__lead lead">{t.hero.lead}</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#install">{t.hero.ctaInstall}</a>
+          <a class="btn btn--ghost" href={docs}>{t.hero.ctaDocs}<Fragment set:html={arrow} /></a>
+        </div>
+      </div>
+      <div class="hero__demo">
+        <Demo t={t} />
+      </div>
+      <div class="hero__meta" style="margin-top:16px">
+        <a href={rel.url}>{t.hero.version} {rel.tag}</a>
+        <span>AGPL-3.0</span>
+        <span>{t.hero.stack}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ editor -->
+  <section class="section editor" id="editor" aria-labelledby="editor-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="h-section" id="editor-title">{t.editor.title}</h2>
+        <p class="lead">{t.editor.lead}</p>
+      </div>
+      <div class="editor__frame" data-editor-frame>
+        <div class="editor__zoom" data-zoom>
+        <Picture
+          src={zh ? uiZh : uiEn}
+          widths={[1280, 1920, 2560, 3834]}
+          sizes="(min-width: 1440px) 2400px, 170vw"
+          formats={['avif', 'webp']}
+          alt={t.editor.alt}
+          loading="lazy"
+          decoding="async"
+        />
+        {
+          spots.map((s, i) => (
+            <span
+              class="spot"
+              data-spot={i}
+              data-z={s.z}
+              data-fx={s.fx}
+              data-fy={s.fy}
+              style={`left:${s.l}%;top:${s.t}%;width:${s.w}%;height:${s.h}%`}
+              aria-hidden="true"
+            />
+          ))
+        }
+        </div>
+      </div>
+      <ol class="steps" data-steps>
+        {
+          t.editor.steps.map((s, i) => (
+            <li class="step" data-step={i}>
+              <button type="button" aria-pressed="false">
+                <span class="step__n">{String(i + 1).padStart(2, '0')}</span>
+                <span class="step__name">{s.name}</span>
+                <p class="step__body">{s.body}</p>
+              </button>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================================ nodes -->
+  <section class="section nodes" id="nodes" aria-labelledby="nodes-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="h-section" id="nodes-title">{t.nodes.title}</h2>
+        <p class="lead">{t.nodes.lead}</p>
+      </div>
+      <ul class="filters" aria-label={t.nodes.filterLabel} data-filters>
+        <li>
+          <button type="button" aria-pressed="true" data-filter="">
+            {t.nodes.all} <small>{nodeCount}</small>
+          </button>
+        </li>
+        {
+          categories.map((c) => (
+            <li>
+              <button type="button" aria-pressed="false" data-filter={c.id} style={`--c:${c.color}`}>
+                <i aria-hidden="true" />
+                {zh ? c.name.zh : c.name.en} <small>{c.nodes.length}</small>
+              </button>
+            </li>
+          ))
+        }
+      </ul>
+      <ul class="wall" data-wall>
+        {
+          categories.flatMap((c) =>
+            c.nodes.map((n) => (
+              <li data-cat={c.id} style={`--c:${c.color}`}>
+                {n}
+              </li>
+            )),
+          )
+        }
+      </ul>
+      <div class="nodes__foot">
+        <span data-count aria-live="polite">{t.nodes.count(nodeCount, categoryCount)}</span>
+        <a class="link" href={`${docs}usage/node-reference`}>{t.nodes.reference}<Fragment set:html={arrow} /></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ teaching -->
+  <section class="section paper teach" id="teaching" aria-labelledby="teach-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="h-section" id="teach-title">{t.teaching.title}</h2>
+        <p class="lead">{t.teaching.lead}</p>
+      </div>
+      <div class="teach__grid">
+        <div class="edu" data-edu>
+          <div class="edu__head">
+            <h3>{t.teaching.demoTitle}</h3>
+            <span>foundations · Classical</span>
+          </div>
+          <div class="edu__body">
+            <p class="edu__desc">{t.teaching.demoBody}</p>
+            <div class="edu__label">{t.teaching.column}</div>
+            <div class="edu__col">
+              {
+                [2, 4, 4, 4, 5, 5, 7, 9].map((v, i) => (
+                  <input
+                    type="number"
+                    inputmode="decimal"
+                    step="any"
+                    value={v}
+                    aria-label={t.teaching.valueLabel(i + 1)}
+                    data-edu-in
+                  />
+                ))
+              }
+            </div>
+            <ol class="edu__steps">
+              {
+                t.teaching.steps.map((s, i) => (
+                  <li class="edu__step">
+                    <span class="k">{s}</span>
+                    <span class="note">{t.teaching.stepNotes[i]}</span>
+                    <output data-edu-out={i} />
+                  </li>
+                ))
+              }
+            </ol>
+          </div>
+        </div>
+        <div class="teach__side">
+          <div>
+            <h3>{t.teaching.inspectorTitle}</h3>
+            <p>{t.teaching.inspectorBody}</p>
+            <a class="link" href={`${docs}usage/teaching-inspector`}>{t.teaching.learnMore}<Fragment set:html={arrow} /></a>
+          </div>
+          <div>
+            <h3>{t.teaching.packsTitle}</h3>
+            <ul class="packs">
+              {
+                t.teaching.packs.map((p) => (
+                  <li>
+                    <code>{p.id}</code>
+                    <span>{p.modules}</span>
+                  </li>
+                ))
+              }
+            </ul>
+            <div style="margin-top:20px">
+              <Copy text="cdui plugin install foundations deep rl" label={t.install.copy} done={t.install.copied} paper />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ ship -->
+  <section class="section ship" id="ship" aria-labelledby="ship-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="h-section" id="ship-title">{t.ship.title}</h2>
+        <p class="lead">{t.ship.lead}</p>
+      </div>
+      <div class="ship__grid">
+        <ol class="ship__list" data-ship>
+          {
+            t.ship.items.map((it, i) => (
+              <li class="ship__item" data-ship-item={i}>
+                <h3>{it.name}</h3>
+                <p>{it.body}</p>
+                <a class="link" href={`${docs}${it.link}`}>
+                  {t.ship.more}
+                  <span class="sr-only">{t.ship.moreAbout(it.name)}</span>
+                  <Fragment set:html={arrow} />
+                </a>
+                <div class="term term--inline" aria-hidden="true">
+                  <pre class="term__pane" set:html={panes[i]} />
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+        <div class="ship__stage" aria-hidden="true">
+          <div class="ship__sticky">
+            <div class="term">
+              <div class="term__bar">
+                <i /><i /><i /><span data-term-title>{paneTitles[0]}</span>
+              </div>
+              <div class="term__panes">
+                {panes.map((p, i) => <pre class:list={['term__pane', i === 0 && 'is-active']} data-pane={i} data-title={paneTitles[i]} set:html={p} />)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ examples -->
+  <section class="section examples" id="examples" aria-labelledby="ex-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="h-section" id="ex-title">{t.examples.title}</h2>
+        <p class="lead">{t.examples.lead}</p>
+      </div>
+      <div class="ex__groups">
+        <div class="ex__group">
+          <h3>{t.examples.groups[0].name}</h3>
+          <ul class="ex__arch">
+            {
+              t.examples.groups[0].items.map((n, i) => (
+                <li style={`--c:${archColor[i]}`}>
+                  {n}
+                  <small>{archCat[i]}</small>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <div class="ex__group">
+          <h3>{t.examples.groups[1].name}</h3>
+          <ul class="ex__hands">
+            {t.examples.groups[1].items.map((n) => <li>{n}</li>)}
+          </ul>
+        </div>
+      </div>
+      <div class="ex__foot">
+        <a class="link" href={`${docs}usage/examples-gallery`}>{t.examples.gallery}<Fragment set:html={arrow} /></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ extend -->
+  <section class="section extend" id="extend" aria-labelledby="extend-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="h-section" id="extend-title">{t.extend.title}</h2>
+        <p class="lead">{t.extend.lead}</p>
+      </div>
+      <div class="extend__grid">
+        <figure class="code">
+          <figcaption><span>backend/app/custom_nodes/my_node.py</span><span>Python</span></figcaption>
+          <pre><code set:html={pyNode} /></pre>
+        </figure>
+        <div class="extend__side">
+          <h3>{t.extend.pluginsTitle}</h3>
+          <p>{t.extend.pluginsBody}</p>
+          <Copy text="cdui plugin install owner/repo" label={t.install.copy} done={t.install.copied} />
+          <p>{t.extend.copilot}</p>
+          <div class="extend__links">
+            <a class="link" href="https://github.com/CodefyUI/CodefyUI-Plugin-Official">{t.extend.template}<Fragment set:html={arrow} /></a>
+            <a class="link" href={`${docs}advanced/custom-nodes`}>{t.extend.customDocs}<Fragment set:html={arrow} /></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ install -->
+  <section class="section install" id="install" aria-labelledby="install-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="h-section" id="install-title">{t.install.title}</h2>
+        <p class="lead">{t.install.lead}</p>
+      </div>
+      <ol class="install__steps">
+        <li class="install__step">
+          <span>01</span>
+          <div data-tabs>
+            <h3>{t.install.step1}</h3>
+            <div class="tabs" role="tablist" aria-label={t.install.step1}>
+              <button type="button" role="tab" id="tab-unix" aria-controls="panel-unix" aria-selected="true" data-tab="unix">{t.install.os.unix}</button>
+              <button type="button" role="tab" id="tab-win" aria-controls="panel-win" aria-selected="false" tabindex="-1" data-tab="win">{t.install.os.win}</button>
+            </div>
+            <div role="tabpanel" id="panel-unix" aria-labelledby="tab-unix" data-panel="unix">
+              <Copy text={installUnix} label={t.install.copy} done={t.install.copied} />
+            </div>
+            <div role="tabpanel" id="panel-win" aria-labelledby="tab-win" data-panel="win" hidden>
+              <Copy text={installWin} label={t.install.copy} done={t.install.copied} ps />
+            </div>
+          </div>
+        </li>
+        <li class="install__step">
+          <span>02</span>
+          <div>
+            <h3>{t.install.step2}</h3>
+            <Copy text="cdui start" label={t.install.copy} done={t.install.copied} />
+          </div>
+        </li>
+        <li class="install__step">
+          <span>03</span>
+          <div>
+            <h3>{t.install.step3}</h3>
+            <span class="install__url">localhost:8000</span>
+          </div>
+        </li>
+      </ol>
+      <div class="install__note">
+        <span>{t.install.devices}</span>
+        <a class="link" href={`${docs}getting-started/installation`}>{t.install.guide}<Fragment set:html={arrow} /></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ open source -->
+  <section class="section open" id="open-source" aria-labelledby="open-title">
+    <div class="wrap open__inner">
+      <h2 class="open__title" id="open-title">{t.open.title}</h2>
+      <div class="open__body">
+        <p>{t.open.body}</p>
+        <a class="btn btn--primary" href={gh}><Fragment set:html={github} />{t.open.star}</a>
+        <div class="open__links">
+          <a class="link" href={`${docs}licensing`}>{t.open.faq}<Fragment set:html={arrow} /></a>
+          <a class="link" href={`${gh}/blob/main/CONTRIBUTING.md`}>{t.open.contribute}<Fragment set:html={arrow} /></a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<Footer t={t} />
+
+<script>
+  import '../scripts/site';
+</script>

@@ -1,0 +1,11 @@
+---
+// CJK web font only for this page; Apple devices use PingFang TC and never download it.
+import '@fontsource-variable/noto-sans-tc/wght.css';
+import Base from '../../layouts/Base.astro';
+import Home from '../../components/Home.astro';
+import { zh } from '../../i18n/zh';
+---
+
+<Base t={zh} path="/">
+  <Home t={zh} />
+</Base>

@@ -1,0 +1,47 @@
+---
+import type { Dict } from '../i18n/en';
+interface Props {
+  t: Dict;
+}
+const { t } = Astro.props;
+const zh = t.lang !== 'en';
+const docs = zh ? 'https://docs.codefyui.com/zh-TW/' : 'https://docs.codefyui.com/';
+const gh = 'https://github.com/CodefyUI/CodefyUI';
+const year = new Date().getFullYear();
+const links = [
+  { href: docs, label: t.footer.docs },
+  { href: `${gh}/releases`, label: t.footer.releases },
+  { href: `${gh}/blob/main/CHANGELOG.md`, label: t.footer.changelog },
+  { href: gh, label: 'GitHub' },
+  { href: `${gh}/issues`, label: t.footer.issues },
+  { href: 'https://github.com/CodefyUI/CodefyUI-Plugin-Official', label: t.footer.template },
+  { href: `${gh}/blob/main/LICENSE`, label: t.footer.license },
+  { href: `${docs}licensing`, label: t.open.faq },
+  { href: `${gh}/blob/main/CONTRIBUTING.md`, label: t.open.contribute },
+];
+---
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <div class="footer__brand">
+      <a class="wordmark" href={zh ? '/zh-TW/' : '/'}><span>Codefy<b>UI</b></span></a>
+      <p>{t.meta.description.split(/(?<=[.。])\s?/)[0]}</p>
+    </div>
+    <ul class="footer__nav">
+      {
+        links.map((l) => (
+          <li>
+            <a href={l.href}>{l.label}</a>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="footer__base">
+      <span>© {year} {t.footer.rights}. AGPL-3.0.</span>
+      <span>
+        <a href={zh ? '/' : '/zh-TW/'} hreflang={zh ? 'en' : 'zh-TW'}>{zh ? 'English' : '繁體中文'}</a>
+      </span>
+    </div>
+  </div>
+  <div class="footer__mega" aria-hidden="true"><span><b></b></span></div>
+</footer>
