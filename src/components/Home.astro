@@ -1,13 +1,11 @@
 ---
-import { Picture } from 'astro:assets';
 import type { Dict } from '../i18n/en';
 import Demo from './Demo.astro';
+import EditorMock from './EditorMock.astro';
 import Nav from './Nav.astro';
 import Footer from './Footer.astro';
 import Copy from './Copy.astro';
 import { categories, nodeCount, categoryCount } from '../data/nodes';
-import uiEn from '../assets/ui-en.png';
-import uiZh from '../assets/ui-zh.png';
 import { release } from '../data/release';
 
 interface Props {
@@ -22,15 +20,6 @@ const rel = await release();
 const installUnix = 'curl -fsSL https://raw.githubusercontent.com/CodefyUI/CodefyUI/main/install.sh | bash';
 const installWin =
   'powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/CodefyUI/CodefyUI/main/install.ps1 | iex"';
-
-// Hotspots on the editor screenshot, in percent of the image.
-// z is the camera zoom used when that step is active; fx/fy the point to centre.
-const spots = [
-  { l: 2.2, t: 9.2, w: 15.6, h: 86, z: 1.9, fx: 12, fy: 26 },
-  { l: 33, t: 11, w: 53.5, h: 83, z: 1.45, fx: 58, fy: 45 },
-  { l: 5.4, t: 0.6, w: 19.8, h: 4.2, z: 2.6, fx: 15, fy: 3 },
-  { l: 0.4, t: 96.2, w: 17, h: 3.6, z: 2.6, fx: 10, fy: 97 },
-];
 
 // Terminal panes for the "ship" section. Commands are taken from the docs.
 const panes = [
@@ -96,241 +85,229 @@ const arrow = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9L9 3M4 3
 <Nav t={t} />
 
 <main id="main">
-  <!-- ============================================================ hero -->
-  <section class="hero" aria-labelledby="hero-title" data-hero>
-    <div class="wrap">
-      <div class="hero__top">
-        <h1 class="hero__title" id="hero-title">
-          {t.hero.title.map((l) => <span class="line"><span>{l}</span></span>)}
-        </h1>
+  <!-- ============================================================ 1 hero -->
+  <section class="screen hero" aria-labelledby="hero-title" data-hero>
+    <div class="wrap hero__inner">
+      <h1 class="hero__title" id="hero-title">
+        {t.hero.title.map((l) => <span class="line"><span>{l}</span></span>)}
+      </h1>
+      <div class="hero__row">
         <p class="hero__lead lead">{t.hero.lead}</p>
         <div class="hero__actions">
           <a class="btn btn--primary" href="#install">{t.hero.ctaInstall}</a>
           <a class="btn btn--ghost" href={docs}>{t.hero.ctaDocs}<Fragment set:html={arrow} /></a>
         </div>
       </div>
-      <div class="hero__demo">
-        <Demo t={t} />
-      </div>
-      <div class="hero__meta" style="margin-top:16px">
+      <div class="hero__meta">
         <a href={rel.url}>{t.hero.version} {rel.tag}</a>
         <span>AGPL-3.0</span>
         <span>{t.hero.stack}</span>
       </div>
     </div>
+    <a class="cue" href="#demo">
+      <span class="cue__node"><b>Start</b><span>{t.hero.cue}</span><i aria-hidden="true"></i></span>
+      <span class="cue__wire" aria-hidden="true"></span>
+    </a>
   </section>
 
-  <!-- ============================================================ editor -->
-  <section class="section editor" id="editor" aria-labelledby="editor-title">
+  <!-- ============================================================ 2 demo -->
+  <section class="screen demo-screen" id="demo" aria-labelledby="demo-title">
     <div class="wrap">
-      <div class="section-head">
+      <div class="demo-head">
+        <span class="demo-head__port" aria-hidden="true"></span>
+        <h2 id="demo-title">{t.demo.title}</h2>
+      </div>
+      <Demo t={t} />
+    </div>
+  </section>
+
+  <!-- ============================================================ 3 editor tour -->
+  <section class="screen tour" id="editor" aria-labelledby="editor-title">
+    <div class="wrap split split--4-8">
+      <div class="split__side">
         <h2 class="h-section" id="editor-title">{t.editor.title}</h2>
-        <p class="lead">{t.editor.lead}</p>
-      </div>
-      <div class="editor__frame" data-editor-frame>
-        <div class="editor__zoom" data-zoom>
-        <Picture
-          src={zh ? uiZh : uiEn}
-          widths={[1280, 1920, 2560, 3834]}
-          sizes="(min-width: 1440px) 2400px, 170vw"
-          formats={['avif', 'webp']}
-          alt={t.editor.alt}
-          loading="lazy"
-          decoding="async"
-        />
-        {
-          spots.map((s, i) => (
-            <span
-              class="spot"
-              data-spot={i}
-              data-z={s.z}
-              data-fx={s.fx}
-              data-fy={s.fy}
-              style={`left:${s.l}%;top:${s.t}%;width:${s.w}%;height:${s.h}%`}
-              aria-hidden="true"
-            />
-          ))
-        }
-        </div>
-      </div>
-      <ol class="steps" data-steps>
-        {
-          t.editor.steps.map((s, i) => (
-            <li class="step" data-step={i}>
-              <button type="button" aria-pressed="false">
-                <span class="step__n">{String(i + 1).padStart(2, '0')}</span>
-                <span class="step__name">{s.name}</span>
-                <p class="step__body">{s.body}</p>
-              </button>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
-  </section>
-
-  <!-- ============================================================ nodes -->
-  <section class="section nodes" id="nodes" aria-labelledby="nodes-title">
-    <div class="wrap">
-      <div class="section-head">
-        <h2 class="h-section" id="nodes-title">{t.nodes.title}</h2>
-        <p class="lead">{t.nodes.lead}</p>
-      </div>
-      <ul class="filters" aria-label={t.nodes.filterLabel} data-filters>
-        <li>
-          <button type="button" aria-pressed="true" data-filter="">
-            {t.nodes.all} <small>{nodeCount}</small>
-          </button>
-        </li>
-        {
-          categories.map((c) => (
-            <li>
-              <button type="button" aria-pressed="false" data-filter={c.id} style={`--c:${c.color}`}>
-                <i aria-hidden="true" />
-                {zh ? c.name.zh : c.name.en} <small>{c.nodes.length}</small>
-              </button>
-            </li>
-          ))
-        }
-      </ul>
-      <ul class="wall" data-wall>
-        {
-          categories.flatMap((c) =>
-            c.nodes.map((n) => (
-              <li data-cat={c.id} style={`--c:${c.color}`}>
-                {n}
-              </li>
-            )),
-          )
-        }
-      </ul>
-      <div class="nodes__foot">
-        <span data-count aria-live="polite">{t.nodes.count(nodeCount, categoryCount)}</span>
-        <a class="link" href={`${docs}usage/node-reference`}>{t.nodes.reference}<Fragment set:html={arrow} /></a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================ teaching -->
-  <section class="section paper teach" id="teaching" aria-labelledby="teach-title">
-    <div class="wrap">
-      <div class="section-head">
-        <h2 class="h-section" id="teach-title">{t.teaching.title}</h2>
-        <p class="lead">{t.teaching.lead}</p>
-      </div>
-      <div class="teach__grid">
-        <div class="edu" data-edu>
-          <div class="edu__head">
-            <h3>{t.teaching.demoTitle}</h3>
-            <span>foundations · Classical</span>
-          </div>
-          <div class="edu__body">
-            <p class="edu__desc">{t.teaching.demoBody}</p>
-            <div class="edu__label">{t.teaching.column}</div>
-            <div class="edu__col">
-              {
-                [2, 4, 4, 4, 5, 5, 7, 9].map((v, i) => (
-                  <input
-                    type="number"
-                    inputmode="decimal"
-                    step="any"
-                    value={v}
-                    aria-label={t.teaching.valueLabel(i + 1)}
-                    data-edu-in
-                  />
-                ))
-              }
-            </div>
-            <ol class="edu__steps">
-              {
-                t.teaching.steps.map((s, i) => (
-                  <li class="edu__step">
-                    <span class="k">{s}</span>
-                    <span class="note">{t.teaching.stepNotes[i]}</span>
-                    <output data-edu-out={i} />
-                  </li>
-                ))
-              }
-            </ol>
-          </div>
-        </div>
-        <div class="teach__side">
-          <div>
-            <h3>{t.teaching.inspectorTitle}</h3>
-            <p>{t.teaching.inspectorBody}</p>
-            <a class="link" href={`${docs}usage/teaching-inspector`}>{t.teaching.learnMore}<Fragment set:html={arrow} /></a>
-          </div>
-          <div>
-            <h3>{t.teaching.packsTitle}</h3>
-            <ul class="packs">
-              {
-                t.teaching.packs.map((p) => (
-                  <li>
-                    <code>{p.id}</code>
-                    <span>{p.modules}</span>
-                  </li>
-                ))
-              }
-            </ul>
-            <div style="margin-top:20px">
-              <Copy text="cdui plugin install foundations deep rl" label={t.install.copy} done={t.install.copied} paper />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================ ship -->
-  <section class="section ship" id="ship" aria-labelledby="ship-title">
-    <div class="wrap">
-      <div class="section-head">
-        <h2 class="h-section" id="ship-title">{t.ship.title}</h2>
-        <p class="lead">{t.ship.lead}</p>
-      </div>
-      <div class="ship__grid">
-        <ol class="ship__list" data-ship>
+        <p class="lead lead--sm">{t.editor.lead}</p>
+        <ol class="tour__steps" data-steps>
           {
-            t.ship.items.map((it, i) => (
-              <li class="ship__item" data-ship-item={i}>
-                <h3>{it.name}</h3>
-                <p>{it.body}</p>
-                <a class="link" href={`${docs}${it.link}`}>
-                  {t.ship.more}
-                  <span class="sr-only">{t.ship.moreAbout(it.name)}</span>
-                  <Fragment set:html={arrow} />
-                </a>
-                <div class="term term--inline" aria-hidden="true">
-                  <pre class="term__pane" set:html={panes[i]} />
-                </div>
+            t.editor.steps.map((s, i) => (
+              <li class="tour__step" data-step={i}>
+                <button type="button" aria-pressed="false">
+                  <span class="tour__n">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="tour__name">{s.name}</span>
+                  <span class="tour__body">{s.body}</span>
+                  <span class="tour__bar" aria-hidden="true"><i /></span>
+                </button>
               </li>
             ))
           }
         </ol>
-        <div class="ship__stage" aria-hidden="true">
-          <div class="ship__sticky">
-            <div class="term">
-              <div class="term__bar">
-                <i /><i /><i /><span data-term-title>{paneTitles[0]}</span>
-              </div>
-              <div class="term__panes">
-                {panes.map((p, i) => <pre class:list={['term__pane', i === 0 && 'is-active']} data-pane={i} data-title={paneTitles[i]} set:html={p} />)}
-              </div>
-            </div>
+      </div>
+      <div class="split__main tour__stage">
+        <EditorMock label={t.editor.alt} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 4 nodes -->
+  <section class="screen nodes" id="nodes" aria-labelledby="nodes-title">
+    <div class="wrap split split--4-8">
+      <div class="split__side">
+        <h2 class="h-section" id="nodes-title">{t.nodes.title}</h2>
+        <p class="lead lead--sm">{t.nodes.lead}</p>
+        <ul class="filters" aria-label={t.nodes.filterLabel} data-filters>
+          <li>
+            <button type="button" aria-pressed="true" data-filter="">
+              {t.nodes.all} <small>{nodeCount}</small>
+            </button>
+          </li>
+          {
+            categories.map((c) => (
+              <li>
+                <button type="button" aria-pressed="false" data-filter={c.id} style={`--c:${c.color}`}>
+                  <i aria-hidden="true" />
+                  {zh ? c.name.zh : c.name.en} <small>{c.nodes.length}</small>
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="nodes__foot">
+          <span data-count aria-live="polite">{t.nodes.count(nodeCount, categoryCount)}</span>
+          <a class="link" href={`${docs}usage/node-reference`}>{t.nodes.reference}<Fragment set:html={arrow} /></a>
+        </div>
+      </div>
+      <div class="split__main">
+        <ul class="wall" data-wall>
+          {
+            categories.flatMap((c) =>
+              c.nodes.map((n) => (
+                <li data-cat={c.id} style={`--c:${c.color}`}>
+                  {n}
+                </li>
+              )),
+            )
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 5 teaching -->
+  <section class="screen paper teach" id="teaching" aria-labelledby="teach-title">
+    <div class="wrap teach__grid">
+      <div class="teach__intro">
+        <h2 class="h-section" id="teach-title">{t.teaching.title}</h2>
+        <p class="lead lead--sm">{t.teaching.lead}</p>
+        <h3>{t.teaching.inspectorTitle}</h3>
+        <p class="teach__small">{t.teaching.inspectorBody}</p>
+        <a class="link" href={`${docs}usage/teaching-inspector`}>{t.teaching.learnMore}<Fragment set:html={arrow} /></a>
+      </div>
+      <div class="edu" data-edu>
+        <div class="edu__head">
+          <h3>{t.teaching.demoTitle}</h3>
+          <span>foundations · Classical</span>
+        </div>
+        <div class="edu__body">
+          <p class="edu__desc">{t.teaching.demoBody}</p>
+          <div class="edu__label">{t.teaching.column}</div>
+          <div class="edu__col">
+            {
+              [2, 4, 4, 4, 5, 5, 7, 9].map((v, i) => (
+                <input type="number" inputmode="decimal" step="any" value={v} aria-label={t.teaching.valueLabel(i + 1)} data-edu-in />
+              ))
+            }
+          </div>
+          <ol class="edu__steps">
+            {
+              t.teaching.steps.map((s, i) => (
+                <li class="edu__step">
+                  <span class="k">{s}</span>
+                  <span class="note">{t.teaching.stepNotes[i]}</span>
+                  <output data-edu-out={i} />
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </div>
+      <div class="teach__packs">
+        <h3>{t.teaching.packsTitle}</h3>
+        <ul class="packs">
+          {
+            t.teaching.packs.map((p) => (
+              <li>
+                <code>{p.id}</code>
+                <span>{p.modules}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <Copy text="cdui plugin install foundations deep rl" label={t.install.copy} done={t.install.copied} paper />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 6 ship -->
+  <section class="screen ship" id="ship" aria-labelledby="ship-title">
+    <div class="wrap split split--5-7">
+      <div class="split__side">
+        <h2 class="h-section" id="ship-title">{t.ship.title}</h2>
+        <p class="lead lead--sm">{t.ship.lead}</p>
+        <ul class="ship__list" data-ship>
+          {
+            t.ship.items.map((it, i) => (
+              <li class="ship__item" data-ship-item={i}>
+                <button type="button" id={`ship-tab-${i}`} aria-controls={`ship-detail-${i}`} aria-expanded={i === 0 ? 'true' : 'false'}>
+                  <span class="ship__name">{it.name}</span>
+                  <span class="ship__bar" aria-hidden="true"><i /></span>
+                </button>
+                <div class="ship__detail" id={`ship-detail-${i}`}>
+                  <div>
+                    <p>{it.body}</p>
+                    <a class="link" href={`${docs}${it.link}`}>
+                      {t.ship.more}
+                      <span class="sr-only">{t.ship.moreAbout(it.name)}</span>
+                      <Fragment set:html={arrow} />
+                    </a>
+                  </div>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div class="split__main">
+        <div class="term" id="ship-term" role="region" aria-label={t.ship.title}>
+          <div class="term__bar">
+            <i /><i /><i /><span data-term-title>{paneTitles[0]}</span>
+          </div>
+          <div class="term__panes">
+            {
+              panes.map((p, i) => (
+                <pre
+                  class:list={['term__pane', i === 0 && 'is-active']}
+                  data-pane={i}
+                  data-title={paneTitles[i]}
+                  aria-hidden={i === 0 ? 'false' : 'true'}
+                  set:html={p}
+                />
+              ))
+            }
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============================================================ examples -->
-  <section class="section examples" id="examples" aria-labelledby="ex-title">
-    <div class="wrap">
-      <div class="section-head">
+  <!-- ============================================================ 7 examples -->
+  <section class="screen examples" id="examples" aria-labelledby="ex-title">
+    <div class="wrap split split--4-8">
+      <div class="split__side">
         <h2 class="h-section" id="ex-title">{t.examples.title}</h2>
-        <p class="lead">{t.examples.lead}</p>
+        <p class="lead lead--sm">{t.examples.lead}</p>
+        <a class="link" href={`${docs}usage/examples-gallery`}>{t.examples.gallery}<Fragment set:html={arrow} /></a>
       </div>
-      <div class="ex__groups">
+      <div class="split__main ex__groups">
         <div class="ex__group">
           <h3>{t.examples.groups[0].name}</h3>
           <ul class="ex__arch">
@@ -351,46 +328,43 @@ const arrow = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9L9 3M4 3
           </ul>
         </div>
       </div>
-      <div class="ex__foot">
-        <a class="link" href={`${docs}usage/examples-gallery`}>{t.examples.gallery}<Fragment set:html={arrow} /></a>
-      </div>
     </div>
   </section>
 
-  <!-- ============================================================ extend -->
-  <section class="section extend" id="extend" aria-labelledby="extend-title">
-    <div class="wrap">
-      <div class="section-head">
+  <!-- ============================================================ 8 extend -->
+  <section class="screen extend" id="extend" aria-labelledby="extend-title">
+    <div class="wrap split split--5-7">
+      <div class="split__side">
         <h2 class="h-section" id="extend-title">{t.extend.title}</h2>
-        <p class="lead">{t.extend.lead}</p>
+        <p class="lead lead--sm">{t.extend.lead}</p>
+        <h3 class="extend__h">{t.extend.pluginsTitle}</h3>
+        <p class="extend__p">{t.extend.pluginsBody}</p>
+        <Copy text="cdui plugin install owner/repo" label={t.install.copy} done={t.install.copied} />
+        <p class="extend__p">{t.extend.copilot}</p>
+        <div class="extend__links">
+          <a class="link" href="https://github.com/CodefyUI/CodefyUI-Plugin-Official">{t.extend.template}<Fragment set:html={arrow} /></a>
+          <a class="link" href={`${docs}advanced/custom-nodes`}>{t.extend.customDocs}<Fragment set:html={arrow} /></a>
+        </div>
       </div>
-      <div class="extend__grid">
+      <div class="split__main">
         <figure class="code">
           <figcaption><span>backend/app/custom_nodes/my_node.py</span><span>Python</span></figcaption>
           <pre><code set:html={pyNode} /></pre>
         </figure>
-        <div class="extend__side">
-          <h3>{t.extend.pluginsTitle}</h3>
-          <p>{t.extend.pluginsBody}</p>
-          <Copy text="cdui plugin install owner/repo" label={t.install.copy} done={t.install.copied} />
-          <p>{t.extend.copilot}</p>
-          <div class="extend__links">
-            <a class="link" href="https://github.com/CodefyUI/CodefyUI-Plugin-Official">{t.extend.template}<Fragment set:html={arrow} /></a>
-            <a class="link" href={`${docs}advanced/custom-nodes`}>{t.extend.customDocs}<Fragment set:html={arrow} /></a>
-          </div>
-        </div>
       </div>
     </div>
   </section>
 
-  <!-- ============================================================ install -->
-  <section class="section install" id="install" aria-labelledby="install-title">
-    <div class="wrap">
-      <div class="section-head">
+  <!-- ============================================================ 9 install -->
+  <section class="screen install" id="install" aria-labelledby="install-title">
+    <div class="wrap split split--5-7">
+      <div class="split__side">
         <h2 class="h-section" id="install-title">{t.install.title}</h2>
-        <p class="lead">{t.install.lead}</p>
+        <p class="lead lead--sm">{t.install.lead}</p>
+        <p class="install__devices">{t.install.devices}</p>
+        <a class="link" href={`${docs}getting-started/installation`}>{t.install.guide}<Fragment set:html={arrow} /></a>
       </div>
-      <ol class="install__steps">
+      <ol class="split__main install__steps">
         <li class="install__step">
           <span>01</span>
           <div data-tabs>
@@ -422,15 +396,11 @@ const arrow = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9L9 3M4 3
           </div>
         </li>
       </ol>
-      <div class="install__note">
-        <span>{t.install.devices}</span>
-        <a class="link" href={`${docs}getting-started/installation`}>{t.install.guide}<Fragment set:html={arrow} /></a>
-      </div>
     </div>
   </section>
 
-  <!-- ============================================================ open source -->
-  <section class="section open" id="open-source" aria-labelledby="open-title">
+  <!-- ============================================================ 10 open source + footer -->
+  <section class="screen screen--end open" id="open-source" aria-labelledby="open-title">
     <div class="wrap open__inner">
       <h2 class="open__title" id="open-title">{t.open.title}</h2>
       <div class="open__body">
@@ -442,10 +412,9 @@ const arrow = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9L9 3M4 3
         </div>
       </div>
     </div>
+    <Footer t={t} />
   </section>
 </main>
-
-<Footer t={t} />
 
 <script>
   import '../scripts/site';

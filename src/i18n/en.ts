@@ -28,11 +28,13 @@ export const en = {
       'CodefyUI is an open-source, node-based builder for deep learning. Drag layers onto a canvas, wire them into a graph, press Run, then click any node to see the exact numbers that came out of it.',
     ctaInstall: 'Install CodefyUI',
     ctaDocs: 'Read the docs',
+    cue: 'Run the graph',
     stack: 'Python, PyTorch and React',
     version: 'Latest release',
   },
   demo: {
     label: 'A small CodefyUI graph that runs in your browser',
+    title: 'This graph runs right here.',
     run: 'Run',
     running: 'Running',
     idle: 'Idle',
@@ -78,7 +80,8 @@ export const en = {
         body: 'Every node’s output is recorded. Compare input and output cell by cell, capture gradients, follow the loss live.',
       },
     ],
-    alt: 'The CodefyUI editor training a CNN on MNIST: the node library on the left, the graph in the middle, the execution log below.',
+    alt: 'A recreation of the CodefyUI editor training a CNN on MNIST: the node library on the left, the graph in the middle, the execution log below.',
+    replay: 'Replay',
   },
   nodes: {
     title: 'Every node, by name.',

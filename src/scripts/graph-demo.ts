@@ -43,6 +43,19 @@ const WIDE: { w: number; h: number; pos: Layout } = {
     viz: { x: 746, y: 316 },
   },
 };
+// A shorter, wider arrangement for 16:9 windows, where height is what runs out first.
+const ROW: { w: number; h: number; pos: Layout } = {
+  w: 1194,
+  h: 470,
+  pos: {
+    start: { x: 0, y: 6 },
+    input: { x: 152, y: 6 },
+    conv: { x: 462, y: 6 },
+    act: { x: 746, y: 6 },
+    pool: { x: 746, y: 196 },
+    viz: { x: 990, y: 6 },
+  },
+};
 const STACK: { w: number; h: number; pos: Layout } = {
   w: 330,
   h: 1450,
@@ -97,8 +110,9 @@ export function mountDemo(root: HTMLElement) {
   let selected: NodeId | null = null;
   let running = false;
   let hasRun = false;
-  let mode: 'wide' | 'stack' = 'wide';
+  let mode: 'wide' | 'row' | 'stack' = 'wide';
   let scale = 1;
+  let topZ = 1;
   const pos: Layout = structuredClone(WIDE.pos);
 
   // ---------------------------------------------------------------- compute
@@ -125,33 +139,81 @@ export function mountDemo(root: HTMLElement) {
   }
 
   // ---------------------------------------------------------------- layout
-  function applyLayout() {
-    const cs = getComputedStyle(canvas);
-    const avail = canvas.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    const next = avail >= 720 ? 'wide' : 'stack';
-    const L = next === 'wide' ? WIDE : STACK;
-    if (next !== mode) {
-      mode = next;
-      Object.assign(pos, structuredClone(L.pos));
-    }
-    (Object.keys(pos) as NodeId[]).forEach((id) => {
-      nodeEls[id].style.transform = `translate(${pos[id].x}px, ${pos[id].y}px)`;
-    });
-    // World bounds come from the real node sizes, so fonts or copy changes never clip a node.
-    let w = L.w;
-    let h = L.h;
+  // Bounds of the nodes where they stand now, plus a margin.
+  function bounds() {
+    let w = 0;
+    let h = 0;
     (Object.keys(pos) as NodeId[]).forEach((id) => {
       w = Math.max(w, pos[id].x + nodeEls[id].offsetWidth + 8);
       h = Math.max(h, pos[id].y + nodeEls[id].offsetHeight + 12);
     });
-    scale = Math.min(1, avail / w);
+    return { w, h };
+  }
+
+  let avail = 0;
+  // Size the world to the nodes; the canvas grows with it, so a node can be dragged anywhere below.
+  function fitWorld() {
+    const b = bounds();
+    const w = Math.max(b.w, avail / scale);
     world.style.width = `${w}px`;
-    world.style.height = `${h}px`;
-    world.style.transform = `scale(${scale})`;
-    world.style.marginLeft = `${Math.max(0, (avail - w * scale) / 2)}px`;
-    canvas.style.minHeight = `${h * scale}px`;
-    root.dataset.layout = mode;
+    world.style.height = `${b.h}px`;
+    // a transform does not shrink the layout box, so take the difference back with margins
+    world.style.marginBottom = `${b.h * scale - b.h}px`;
+    world.style.marginRight = `${w * scale - w}px`;
+    canvas.style.minHeight = `${b.h * scale}px`;
     drawWires();
+  }
+
+  const LAYOUTS = { wide: WIDE, row: ROW, stack: STACK };
+  const layoutOf = () => LAYOUTS[mode];
+
+  // Bounds of a layout's default positions, measured with the real node sizes.
+  function boundsOf(L: { pos: Layout }) {
+    const saved = structuredClone(pos);
+    Object.assign(pos, structuredClone(L.pos));
+    const b = bounds();
+    Object.assign(pos, saved);
+    return b;
+  }
+
+  function applyLayout() {
+    const cs = getComputedStyle(canvas);
+    avail = canvas.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    // On wide screens the whole graph also fits the viewport height, so the demo is one screen.
+    // Everything on the demo's screen that is not canvas: section padding, heading, toolbar, caption.
+    const section = root.closest<HTMLElement>('.screen');
+    let around = 0;
+    if (section) {
+      const ss = getComputedStyle(section);
+      const head = section.querySelector<HTMLElement>('.demo-head');
+      const hs = head ? getComputedStyle(head) : null;
+      around =
+        parseFloat(ss.paddingTop) +
+        parseFloat(ss.paddingBottom) +
+        (head ? head.offsetHeight + parseFloat(hs!.marginBottom) : 0);
+    }
+    const chrome = root.offsetHeight - canvas.offsetHeight;
+    const fitH = Math.max(300, window.innerHeight - around - chrome - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 6);
+    const scaleFor = (L: { pos: Layout }) => {
+      const b = boundsOf(L);
+      return Math.min(1, avail / b.w, fitH / b.h);
+    };
+    let next: typeof mode = 'stack';
+    if (avail >= 720) next = scaleFor(ROW) > scaleFor(WIDE) + 0.02 ? 'row' : 'wide';
+    if (next !== mode) {
+      mode = next;
+      Object.assign(pos, structuredClone(layoutOf().pos));
+    }
+    (Object.keys(pos) as NodeId[]).forEach((id) => {
+      nodeEls[id].style.transform = `translate(${pos[id].x}px, ${pos[id].y}px)`;
+    });
+    // Scale from the default layout (not from where nodes were dragged), so a drag never shrinks the graph.
+    const b = boundsOf(layoutOf());
+    scale = mode === 'stack' ? Math.min(1, avail / b.w) : Math.min(1, avail / b.w, fitH / b.h);
+    world.style.transform = `scale(${scale})`;
+    world.style.marginLeft = mode === 'stack' ? `${Math.max(0, (avail - b.w * scale) / 2)}px` : '0px';
+    root.dataset.layout = mode;
+    fitWorld();
   }
 
   function portPoint(key: string) {
@@ -207,7 +269,7 @@ export function mountDemo(root: HTMLElement) {
   const wirePaths = new Map<string, { base: SVGPathElement; pulse: SVGPathElement }>();
   function drawWires() {
     const NS = 'http://www.w3.org/2000/svg';
-    const L = mode === 'wide' ? WIDE : STACK;
+    const L = layoutOf();
     svg.setAttribute('viewBox', `0 0 ${L.w} ${L.h}`);
     svg.setAttribute('width', String(L.w));
     svg.setAttribute('height', String(L.h));
@@ -518,6 +580,7 @@ export function mountDemo(root: HTMLElement) {
     handle.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
       start = { px: e.clientX, py: e.clientY, x: pos[id].x, y: pos[id].y };
+      el.style.zIndex = String(++topZ); // the node in hand sits above the others
       handle.setPointerCapture(e.pointerId);
     });
     handle.addEventListener('pointermove', (e) => {
@@ -528,13 +591,13 @@ export function mountDemo(root: HTMLElement) {
         el.dataset.dragged = '1';
         el.classList.add('is-dragging');
       }
-      const L = mode === 'wide' ? WIDE : STACK;
+      // Free movement: left/top stop at the canvas edge, right at its width, downward the canvas grows.
       pos[id] = {
-        x: Math.max(0, Math.min(L.w - el.offsetWidth, start.x + dx)),
-        y: Math.max(0, Math.min(L.h - el.offsetHeight, start.y + dy)),
+        x: Math.max(0, Math.min(avail / scale - el.offsetWidth, start.x + dx)),
+        y: Math.max(0, start.y + dy),
       };
       el.style.transform = `translate(${pos[id].x}px, ${pos[id].y}px)`;
-      drawWires();
+      fitWorld();
     });
     const end = () => {
       start = null;
@@ -549,6 +612,7 @@ export function mountDemo(root: HTMLElement) {
   renderKernel();
   applyLayout();
   new ResizeObserver(() => applyLayout()).observe(canvas);
+  window.addEventListener("resize", () => applyLayout());
   document.fonts?.ready.then(() => drawWires());
   root.classList.add('is-ready');
 

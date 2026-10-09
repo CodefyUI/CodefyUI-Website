@@ -30,11 +30,13 @@ export const zh: Dict = {
       'CodefyUI 是開源的節點式深度學習建構工具。把層拖到畫布上、連成一張圖、按下執行，再點任何一個節點，就能看到從它流出的每一個數字。',
     ctaInstall: '安裝 CodefyUI',
     ctaDocs: '閱讀文件',
+    cue: '執行這張圖',
     stack: '以 Python、PyTorch 與 React 打造',
     version: '最新版本',
   },
   demo: {
     label: '在瀏覽器裡執行的 CodefyUI 小型圖',
+    title: '這張圖就在這裡執行。',
     run: '執行',
     running: '執行中',
     idle: '閒置',
@@ -67,7 +69,8 @@ export const zh: Dict = {
       { name: '執行', body: '選擇 CPU、CUDA、Apple MPS 或 ROCm。進度逐節點即時回傳，只有你改過的部分會重新執行。' },
       { name: '檢視', body: '每個節點的輸出都會被錄下。逐格比較輸入與輸出、擷取梯度、即時追蹤 loss 曲線。' },
     ],
-    alt: 'CodefyUI 編輯器正在以 MNIST 訓練 CNN：左側是節點庫，中間是圖，下方是執行紀錄。',
+    alt: '重現 CodefyUI 編輯器以 MNIST 訓練 CNN 的畫面：左側是節點庫，中間是圖，下方是執行紀錄。',
+    replay: '重播',
   },
   nodes: {
     title: '每一個節點，都有名字。',
