@@ -1,9 +1,11 @@
 ---
 import type { Dict } from '../i18n/en';
+import { stars } from '../data/release';
 interface Props {
   t: Dict;
 }
 const { t } = Astro.props;
+const starCount = await stars();
 const zh = t.lang !== 'en';
 const home = zh ? '/zh-TW/' : '/';
 const other = zh ? '/' : '/zh-TW/';
@@ -52,7 +54,7 @@ const links = [
           ></path></svg
         >
         <span class="nav__gh-label">{t.nav.github}</span>
-        <span data-stars></span>
+        {starCount ? <span class="nav__stars">{starCount.toLocaleString('en-US')}</span> : null}
       </a>
       <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu>
         <span></span><span></span><span class="sr-only">{t.nav.menu}</span>

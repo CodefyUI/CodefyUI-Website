@@ -69,24 +69,6 @@ sectionLinks.forEach((a) => {
   if (s) sectionObs.observe(s);
 });
 
-// ---------------------------------------------------------------- GitHub stars
-(async () => {
-  const el = $('[data-stars]');
-  if (!el) return;
-  try {
-    let n = sessionStorage.getItem('cdui-stars');
-    if (!n) {
-      const r = await fetch('https://api.github.com/repos/CodefyUI/CodefyUI');
-      if (!r.ok) return;
-      n = String((await r.json()).stargazers_count ?? '');
-      sessionStorage.setItem('cdui-stars', n);
-    }
-    if (n && Number(n) > 0) el.textContent = Number(n).toLocaleString();
-  } catch {
-    /* offline or rate-limited: the link still works without a count */
-  }
-})();
-
 // ---------------------------------------------------------------- copy
 $$<HTMLButtonElement>('[data-copy]').forEach((b) => {
   let timer = 0;

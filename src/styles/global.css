@@ -367,10 +367,7 @@ p {
   width: 18px;
   height: 18px;
 }
-.nav__gh [data-stars]:empty {
-  display: none;
-}
-.nav__gh [data-stars] {
+.nav__stars {
   padding-left: 8px;
   border-left: 1px solid var(--line-3);
   color: var(--ink-2);
